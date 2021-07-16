@@ -1,0 +1,24 @@
+{
+  "name": "chatapp-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cinoy98/chatapp-backend.git"
+  },
+  "author": "Cinoy V",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cinoy98/chatapp-backend/issues"
+  },
+  "homepage": "https://github.com/cinoy98/chatapp-backend#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "websocket": "^1.0.34"
+  }
+}
