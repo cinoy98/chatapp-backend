@@ -49,7 +49,7 @@ catch (error) {
 
 function initializeWebsocket(server) {
 
-
+    var connectionArray = [];
     var wsServer = new WebSocketServer({
         httpServer: server,
         autoAcceptConnections: false
@@ -61,9 +61,10 @@ function initializeWebsocket(server) {
     function originIsAllowed(origin) {
         return true;
     }
-    var connectionArray = [];
+    
     var online = {};
     let userlist = [];
+    var cleaned;
     function getConnectionForUserId(userId) {
         let connect = connectionArray.find(connection => connection.userId = userId);
         console.log("connect.username in getConnectionForUserId", connect.userId);
@@ -81,7 +82,7 @@ function initializeWebsocket(server) {
         let unique = true;
         connectionArray.forEach((connect) => {
             if (connect.username == username) {
-                console.log("username exists");
+                console.log("username exists for ", username);
                 unique = false;
             }
         })
@@ -97,7 +98,7 @@ function initializeWebsocket(server) {
 
         }
 
-        console.log("new username is ", newUsername);
+        console.log(`new username for ${username} is  ${newUsername}`);
         return newUsername
 
     }
@@ -111,7 +112,7 @@ function initializeWebsocket(server) {
             return;
         }
         const connection = request.accept(undefined, request.origin);
-        console.log((new Date()) + " Connection accepted.");
+        console.log((new Date()) + " Connection accepted for userId", userId);
         connection["userId"] = userId;
 
         // create a array of connections 
@@ -123,18 +124,15 @@ function initializeWebsocket(server) {
         }
         connection.sendUTF(JSON.stringify(message));
         userId++;
-
         // on message fetch the type of message operation
 
         connection.on("message", (message) => {
             if (message.type == "utf8") {
                 let data = JSON.parse(message.utf8Data);
-                console.log("recieved message ::: ", data);
                 switch (data.type) {
                     case "register":
                         let registerMessage = {}
                         if (checkUniqueUsername(data.username)) {
-                            console.log("unique username ", data.username);
                             addUsername(data.username, data.userId);
                             registerMessage = {
                                 type: "username",
@@ -143,7 +141,7 @@ function initializeWebsocket(server) {
                         }
 
                         else {
-                            console.log("username not unique");
+
                             let newUsername = createUniqueUsername(data.username);
                             addUsername(newUsername, data.userId);
                             registerMessage = {
@@ -154,21 +152,18 @@ function initializeWebsocket(server) {
 
                         connectionArray.forEach((connect) => {
                             userlist.push(connect.username);
-                            var cleaned = [...new Set(userlist)];
+                            cleaned = [...new Set(userlist)];
                             online = {
                                 online: cleaned,
                                 type: "online"
                             }
                         })
-
-                        console.log(online, "server connected list")
+                        console.log("Users connected to server", cleaned);
                         connectionArray.forEach((client) => {
                             client.sendUTF(JSON.stringify(online));
                         })
                         connectionArray.forEach((connection) => {
-                            console.log("connected usernames", connection.username);
                             if (connection.userId == data.userId) {
-                                console.log("reciever connection", connection.username);
                                 connection.sendUTF(JSON.stringify(registerMessage));
                             }
                         })
@@ -178,20 +173,21 @@ function initializeWebsocket(server) {
                             type: "text",
                             from: data.username,
                             message: data.message
-                        }
+                        };
                         // SenderConnection.sendUTF(JSON.stringify(data));
                         connectionArray.forEach((connect) => {
                             if (connect.username == data.reciever) {
-                                console.log("reciever connection", connect.username);
-                                connection.sendUTF(JSON.stringify(sendMessage));
+                                let recieveMessage
+                                    = {
+                                    type: "text",
+                                    from: connect.username,
+                                    message: data.message
+                                }
+                                connection.sendUTF(JSON.stringify(recieveMessage));
                                 connect.sendUTF(JSON.stringify(sendMessage));
                             }
                         })
-                        // var recieverConnection = getConnectionForUserId(data.reciever);
-                        // console.log("recievername", recieverConnection.username);
-                        // SenderConnection.sendUTF(JSON.stringify(data));
-                        // recieverConnection.sendUTF(JSON.stringify(data));
-                        // console.log("sender name", SenderConnection.username);
+
                         break;
                     case "online":
                         break;
@@ -199,6 +195,28 @@ function initializeWebsocket(server) {
             }
         })
 
+        connection.on("close", (connection) => {
+
+            connectionArray = connectionArray.filter(function (el, idx, ar) {
+                console.log("connected usernames", el.username);
+                return el.connected;
+            });
+            userlist = [];
+            cleand = [];
+            connectionArray.forEach((connect) => {
+                userlist.push(connect.username);
+                cleaned = [...new Set(userlist)];
+                online = {
+                    online: cleaned,
+                    type: "online"
+                }
+            })
+
+            connectionArray.forEach((client) => {
+                client.sendUTF(JSON.stringify(online));
+            })
+            
+            console.log("after disconnected", userlist);
+        })
     });
 }
-// handleError();
