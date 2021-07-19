@@ -61,7 +61,7 @@ function initializeWebsocket(server) {
     function originIsAllowed(origin) {
         return true;
     }
-    
+
     var online = {};
     let userlist = [];
     var cleaned;
@@ -169,21 +169,17 @@ function initializeWebsocket(server) {
                         })
                         break;
                     case "text":
-                        let sendMessage = {
-                            type: "text",
-                            from: data.username,
-                            message: data.message
-                        };
+
                         // SenderConnection.sendUTF(JSON.stringify(data));
                         connectionArray.forEach((connect) => {
                             if (connect.username == data.reciever) {
-                                let recieveMessage
-                                    = {
+
+                                let sendMessage = {
                                     type: "text",
-                                    from: connect.username,
+                                    from: data.username,
                                     message: data.message
-                                }
-                                connection.sendUTF(JSON.stringify(recieveMessage));
+                                };
+                                // connection.sendUTF(JSON.stringify(recieveMessage));
                                 connect.sendUTF(JSON.stringify(sendMessage));
                             }
                         })
@@ -198,7 +194,6 @@ function initializeWebsocket(server) {
         connection.on("close", (connection) => {
 
             connectionArray = connectionArray.filter(function (el, idx, ar) {
-                console.log("connected usernames", el.username);
                 return el.connected;
             });
             userlist = [];
@@ -215,7 +210,7 @@ function initializeWebsocket(server) {
             connectionArray.forEach((client) => {
                 client.sendUTF(JSON.stringify(online));
             })
-            
+
             console.log("after disconnected", userlist);
         })
     });
