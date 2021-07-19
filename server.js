@@ -4,7 +4,7 @@ const cors = require("cors");
 const WebSocketServer = require("websocket").server;
 const app = express();
 app.use(cors());
-const port = 8080;
+const port = process.env.PORT || 8055;
 const host = "0.0.0.0";
 const server = http.createServer(app);
 var userId = 1;
@@ -179,7 +179,7 @@ function initializeWebsocket(server) {
                                     from: data.username,
                                     message: data.message
                                 };
-                                // connection.sendUTF(JSON.stringify(recieveMessage));
+    
                                 connect.sendUTF(JSON.stringify(sendMessage));
                             }
                         })
@@ -211,7 +211,7 @@ function initializeWebsocket(server) {
                 client.sendUTF(JSON.stringify(online));
             })
 
-            console.log("after disconnected", userlist);
+            console.log("after disconnected", cleaned);
         })
     });
 }
